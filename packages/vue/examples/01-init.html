@@ -1,0 +1,23 @@
+<div id="app">
+  <h1>{{title}}</h1>
+  这是一个标题
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    data() {
+      return {
+        title: '刘豪'
+      }
+    },
+    render() {
+      return Vue.h('h1', '我你爹')
+    },
+    setup() {
+      return {
+        title: '我是setup,用来打败data的'
+      }
+    }
+  }).mount('#app')
+</script>

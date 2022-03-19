@@ -1,0 +1,19 @@
+<div id="app">
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    setup() {
+      const bol = Vue.ref(false)
+      // Vue.effect(() => {
+      // })
+      return {
+        // title
+      }
+    },
+    render() {
+      Vue.h('h1', {}, '这是一个标题！')
+    }
+  }).mount('#app')
+</script>

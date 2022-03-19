@@ -1,0 +1,28 @@
+<div id="app">
+  <p>{{count}}</p>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+
+<script>
+  Vue.createApp({
+    setup() {
+      const count = Vue.ref({
+        // value: '刘豪'
+        name: '刘豪',
+        value: '1111'
+      })
+      console.log('count is that: ', count);
+      const data = Vue.readonly({
+        name: '刘豪',
+        age: 20
+      })
+
+      console.log('data is Proxy ?', Vue.isProxy(data));
+
+      console.log(data);
+      console.log(Vue.isReadonly(data));
+      return { count }
+    }
+  }).mount('#app')
+</script>

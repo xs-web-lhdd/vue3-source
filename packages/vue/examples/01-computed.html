@@ -1,0 +1,19 @@
+<div id="app">
+  {{computedCount}}
+</div>
+
+<script src="../dist/vue.global.js"></script>
+
+<script>
+  Vue.createApp({
+    setup() {
+      const count = Vue.ref(1)
+      console.log();
+      // let computedCount = Vue.computed([() => count.value])
+      // computedCount = 111
+      return {
+        // computedCount
+      }
+    }
+  }).mount('#app')
+</script>

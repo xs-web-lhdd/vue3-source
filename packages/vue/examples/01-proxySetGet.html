@@ -1,0 +1,36 @@
+<div id="app">
+  <p>{{msg}}</p>
+  <button @click="random">Random msg</button>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+
+<script>
+  Vue.createApp({
+    data() {
+      return {
+        msg: 'msg from data'
+      }
+    },
+    setup() {
+      const msg = Vue.ref('msg from setup')
+      // return {
+      //   // msg
+      // }
+      // return () => {
+      //   return Vue.h('h1', {}, '这是标题1')
+      // }
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(111)
+        }, 1000)
+      })
+    },
+    methods: {
+      random() {
+        // this 指的是 instance.ctx , 执行 this.msg = Math.random() 会触发 set 函数
+        this.msg = Math.random()
+      }
+    }
+  }).mount('#app')
+</script>
