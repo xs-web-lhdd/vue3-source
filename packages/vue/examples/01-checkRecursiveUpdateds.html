@@ -1,0 +1,26 @@
+<div id="app">
+  {{state.count}}
+</div>
+
+<script src="../dist/vue.global.js"></script>
+
+<script>
+  Vue.createApp({
+    setup() {
+      const state = Vue.reactive({
+        count: 0
+      })
+      
+      Vue.watch(() => state.count, (nowValue, preValue) => {
+        state.count ++
+        console.log('===>之前的值:', preValue, "====>现在的值:", nowValue);
+      }, { flush: 'post' })
+
+      state.count ++
+
+      return {
+        state
+      }
+    }
+  }).mount('#app')
+</script>

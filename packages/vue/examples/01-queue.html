@@ -1,0 +1,26 @@
+<div id="app">
+  {{count}}
+</div>
+
+<script src="../dist/vue.global.js"></script>
+
+<script>
+  Vue.createApp({
+    setup() {
+      const count = Vue.ref(1)
+      // Vue.watch(() => count, () => {
+      //   return 1
+      // })
+      Vue.watch(() => count, null, {
+        deep: true,
+        immediate: true
+      })
+      setTimeout(() => {
+        count.value++
+      })
+      return {
+        count
+      }
+    }
+  }).mount('#app')
+</script>

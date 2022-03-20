@@ -35,6 +35,7 @@ export class ComputedRefImpl<T> {
   public readonly [ReactiveFlags.IS_READONLY]: boolean
 
   // 数据是否脏：用来判断 computed 里面的数据需不需要重新计算，默认是 true，也就是第一次需要初始化计算，所以为 true
+  // 数据“脏了 ->>> 依赖的数据发生了变化”就要重新计算啦
   public _dirty = true
   public _cacheable: boolean
 
