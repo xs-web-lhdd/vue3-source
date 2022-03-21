@@ -1333,6 +1333,7 @@ function baseCreateRenderer(
         toggleRecurse(instance, false)
         // beforeMount hook
         if (bm) {
+          // 如果有 beforeMount 钩子函数，就拿出来执行，这里是循环一下执行，因为可能注册多个 beforeMount 钩子函数，所以 bm 是一个数组，拿出来循环一下执行
           invokeArrayFns(bm)
         }
         // onVnodeBeforeMount
@@ -1478,8 +1479,10 @@ function baseCreateRenderer(
 
         // Disallow component effect recursion during pre-lifecycle hooks.
         toggleRecurse(instance, false)
+        // next 表示新的组件的 vnode
         if (next) {
           next.el = vnode.el
+          // 更新组件的 vnode 节点信息
           updateComponentPreRender(instance, next, optimized)
         } else {
           next = vnode
@@ -1505,10 +1508,12 @@ function baseCreateRenderer(
         if (__DEV__) {
           startMeasure(instance, `render`)
         }
+        // 渲染新的子树的 vnode
         const nextTree = renderComponentRoot(instance)
         if (__DEV__) {
           endMeasure(instance, `render`)
         }
+        // 拿到之前子树的 vnode
         const prevTree = instance.subTree
         instance.subTree = nextTree
 
@@ -1529,6 +1534,7 @@ function baseCreateRenderer(
         if (__DEV__) {
           endMeasure(instance, `patch`)
         }
+        // 缓存更新后的 DOM 节点
         next.el = nextTree.el
         if (originNext === null) {
           // self-triggered update. In case of HOC, update parent component
@@ -1537,6 +1543,7 @@ function baseCreateRenderer(
           updateHOCHostEl(instance, nextTree.el)
         }
         // updated hook
+        // 执行 updated 钩子函数
         if (u) {
           queuePostRenderEffect(u, parentSuspense)
         }
@@ -2086,6 +2093,7 @@ function baseCreateRenderer(
     }
   }
 
+  // 递归遍历销毁节点,遇到组件节点调用 unmountcomponent 销毁组件,遇到 普通节点则删除DOM元素
   const unmount: UnmountFn = (
     vnode,
     parentComponent,
@@ -2234,6 +2242,7 @@ function baseCreateRenderer(
     hostRemove(end)
   }
 
+  // 组件销毁对应的函数: onBeforeUnMount => beforeDestroy 
   const unmountComponent = (
     instance: ComponentInternalInstance,
     parentSuspense: SuspenseBoundary | null,
@@ -2262,9 +2271,11 @@ function baseCreateRenderer(
 
     // update may be null if a component is unmounted before its async
     // setup has resolved.
+    // 如果一个异步组件在加载前就销毁了,则不会注册副作用渲染函数
     if (update) {
       // so that scheduler will no longer invoke it
       update.active = false
+      // 调用 unmount 销毁子树
       unmount(subTree, instance, parentSuspense, doRemove)
     }
     // unmounted hook

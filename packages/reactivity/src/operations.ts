@@ -7,6 +7,7 @@ export const enum TrackOpTypes {
   ITERATE = 'iterate'
 }
 
+// Vue.js设计与实现 P99
 export const enum TriggerOpTypes {
   SET = 'set',
   ADD = 'add',

@@ -48,6 +48,7 @@ export type DebuggerEventExtraInfo = {
 // 当前激活的 effect
 export let activeEffect: ReactiveEffect | undefined
 
+// 为对象的 for ... in 设置而生
 export const ITERATE_KEY = Symbol(__DEV__ ? 'iterate' : '')
 export const MAP_KEY_ITERATE_KEY = Symbol(__DEV__ ? 'Map key iterate' : '')
 
@@ -283,6 +284,7 @@ export function trigger(
     // trigger all effects for target
     deps = [...depsMap.values()]
   } else if (key === 'length' && isArray(target)) {
+    // 对数组的 length 做操作,就在派发通知的时候让 收集的 length 和 key 大于 newValue 的派发通知 P118
     depsMap.forEach((dep, key) => {
       if (key === 'length' || key >= (newValue as number)) {
         deps.push(dep)
@@ -295,6 +297,7 @@ export function trigger(
     }
 
     // also run for iteration key on ADD | DELETE | Map.SET
+    // 根据传进来的不同的 type 做不同派发通知的操作
     switch (type) {
       case TriggerOpTypes.ADD:
         if (!isArray(target)) {

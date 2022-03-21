@@ -1,3 +1,5 @@
+// 该文件主要是对 Map Set WeakMap WeakSet 这种集合类型进行 Proxy 时作出的处理
+// 详情见 Vue.js设计与实现 P132
 import { toRaw, ReactiveFlags, toReactive, toReadonly } from './reactive'
 import { track, trigger, ITERATE_KEY, MAP_KEY_ITERATE_KEY } from './effect'
 import { TrackOpTypes, TriggerOpTypes } from './operations'
@@ -15,6 +17,7 @@ const toShallow = <T extends unknown>(value: T): T => value
 const getProto = <T extends CollectionTypes>(v: T): any =>
   Reflect.getPrototypeOf(v)
 
+// baseHandlers.ts 里面的 createGetter 类似,都对 readonly reactive shallow 情况做了重载 
 function get(
   target: MapTypes,
   key: unknown,
@@ -63,10 +66,14 @@ function size(target: IterableCollections, isReadonly = false) {
 }
 
 function add(this: SetTypes, value: unknown) {
+  // 避免数据污染的操作:
   value = toRaw(value)
+  // 通过 toRaw 获取原始数据对象
   const target = toRaw(this)
   const proto = getProto(target)
+  // 检测 原始数据对象上有没有 value
   const hadKey = proto.has.call(target, value)
+  // 如果没有就往原始数据对象上新增,并且派发通知,如果通过add添加的元素已经在 Set 集合中了,就不需要再派发通知了,这对性能更加友好
   if (!hadKey) {
     target.add(value)
     trigger(target, TriggerOpTypes.ADD, value, value)
@@ -75,6 +82,8 @@ function add(this: SetTypes, value: unknown) {
 }
 
 function set(this: MapTypes, key: unknown, value: unknown) {
+  // 对设置的数据进行非响应式处理,原因是因为往原始数据对象 target 上设置 value
+  // 如果设置的 value 是响应式数据就会造成数据污染 P142
   value = toRaw(value)
   const target = toRaw(this)
   const { has, get } = getProto(target)
@@ -88,10 +97,13 @@ function set(this: MapTypes, key: unknown, value: unknown) {
   }
 
   const oldValue = get.call(target, key)
+  // 在原始数据对象上的实际 set 操作:
   target.set(key, value)
   if (!hadKey) {
+    // 没有找到 key 对应数据,那么说明是新增数据(add),不是 set 数据,所以派发通知时 type 是 add
     trigger(target, TriggerOpTypes.ADD, key, value)
   } else if (hasChanged(value, oldValue)) {
+    // 这是改变数据并且前后数据不一致的情况,派发通知时 type 是 set
     trigger(target, TriggerOpTypes.SET, key, value, oldValue)
   }
   return this
@@ -110,7 +122,9 @@ function deleteEntry(this: CollectionTypes, key: unknown) {
 
   const oldValue = get ? get.call(target, key) : undefined
   // forward the operation before queueing reactions
+  // 原始数据执行的 delete 操作
   const result = target.delete(key)
+  // 当要删除的元素确实存在时,才触发依赖:
   if (hadKey) {
     trigger(target, TriggerOpTypes.DELETE, key, undefined, oldValue)
   }

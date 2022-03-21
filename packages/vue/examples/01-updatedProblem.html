@@ -1,0 +1,27 @@
+<div id="app">
+  {{state.count}}
+</div>
+
+<script src="../dist/vue.global.js"></script>
+
+<script>
+  Vue.createApp({
+    setup() {
+      const state = Vue.reactive({
+        count: 0,
+        age: 100
+      })
+      setTimeout(() => {
+        state.count ++
+      }, 1000)
+      // 应避免在 updated 中更新状态,否则会之一触发 onUpdated 钩子函数,然后爆栈
+      Vue.onUpdated(() => {
+        console.log('来吧展示!!!');
+        state.count ++
+      })
+      return {
+        state
+      }
+    }
+  }).mount('#app')
+</script>

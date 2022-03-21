@@ -114,6 +114,7 @@ export type ShallowReactive<T> = T & { [ShallowReactiveMarker]?: true }
  * level properties are reactive. It also does not auto-unwrap refs (even at the
  * root level).
  */
+// 浅响应，即只有对象的第一层属性是响应的
 export function shallowReactive<T extends object>(
   target: T
 ): ShallowReactive<T> {
@@ -204,7 +205,7 @@ function createReactiveObject(
   ) {
     return target
   }
-  // target already has corresponding Proxy   如果已经存在代理对象，直接返回，这种情况很少见
+  // target already has corresponding Proxy   如果已经存在代理对象，直接返回，这种情况很少见, 见 P124 数组的includes方法
   const existingProxy = proxyMap.get(target)
   if (existingProxy) {
     return existingProxy
