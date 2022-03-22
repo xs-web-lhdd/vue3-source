@@ -599,16 +599,17 @@ export function createComponentInstance(
   return instance
 }
 
+// 设计一个当前组件实例的维护方法 P319  为了保证 A 组件在 setup 中注册的生命周期钩子函数只注册到 A 组件上, B 组件在 setup 中注册的生命周期钩子函数只注册到 B 组件上
 export let currentInstance: ComponentInternalInstance | null = null
-
+// 拿到当前组件实例:
 export const getCurrentInstance: () => ComponentInternalInstance | null = () =>
   currentInstance || currentRenderingInstance
-
+// 设置当前组件实例:
 export const setCurrentInstance = (instance: ComponentInternalInstance) => {
   currentInstance = instance
   instance.scope.on()
 }
-
+// 取消当前组件实例(重置当前组件实例):
 export const unsetCurrentInstance = () => {
   currentInstance && currentInstance.scope.off()
   currentInstance = null
@@ -703,6 +704,7 @@ function setupStatefulComponent(
       // 参数大于一就创建 setup 执行上下文
       setup.length > 1 ? createSetupContext(instance) : null)
 
+    // 在执行 setup 函数之间设置组件实例为当前组件实例
     setCurrentInstance(instance)
     pauseTracking()
     // 执行 setup 函数,获取结果
@@ -713,6 +715,7 @@ function setupStatefulComponent(
       [__DEV__ ? shallowReadonly(instance.props) : instance.props, setupContext]
     )
     resetTracking()
+    // 重置当前组件实例,与前面设置组件实例相对应
     unsetCurrentInstance()
 
     // 如果 setup 返回值是一个 promise 的处理情况:

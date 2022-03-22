@@ -1,3 +1,4 @@
+// 见 Vue.js设计与实现 第六章: 原始值的响应式方案
 import {
   activeEffect,
   shouldTrack,
@@ -62,6 +63,7 @@ export function triggerRefValue(ref: RefBase<any>, newVal?: any) {
 }
 
 export function isRef<T>(r: Ref<T> | unknown): r is Ref<T>
+// 通过 __v_isRef 这个标识,判断数据是不是响应式的:
 export function isRef(r: any): r is Ref {
   return !!(r && r.__v_isRef === true)
 }
@@ -97,7 +99,7 @@ function createRef(rawValue: unknown, shallow: boolean) {
   return new RefImpl(rawValue, shallow)
 }
 
-// 利用 class 的存取器特性：
+// 利用 class 的存取器特性：实现 ref 得 .value 特性
 class RefImpl<T> {
   private _value: T
   private _rawValue: T
@@ -131,23 +133,29 @@ export function triggerRef(ref: Ref) {
   triggerRefValue(ref, __DEV__ ? ref.value : void 0)
 }
 
+// 自动脱 ref 函数,在模板上不需要写 xxx.value 只需要写 xxx 即可,降低开发者的心智负担
 export function unref<T>(ref: T | Ref<T>): T {
+  // 如果数据是 ref 类型，那么返回 xxx.value ，否则直接返回即可（解决 setup 的返回数据是非响应式数据的情况）
   return isRef(ref) ? (ref.value as any) : ref
 }
 
+// 脱 ref 处理：
 const shallowUnwrapHandlers: ProxyHandler<any> = {
   get: (target, key, receiver) => unref(Reflect.get(target, key, receiver)),
   set: (target, key, value, receiver) => {
     const oldValue = target[key]
+    // 设置的值的类型是 ref 类型的操作: 把之前的值的 value 更改就行了
     if (isRef(oldValue) && !isRef(value)) {
       oldValue.value = value
       return true
     } else {
+    // 设置的值是非响应式数据的操作: 直接设置值就行了,毕竟非响应式数据上面的数据不存在 value 中
       return Reflect.set(target, key, value, receiver)
     }
   }
 }
 
+// 解决自动脱 ref 这种情况, 对状态进行判断是不是 reactive ,如果是 reactive 那么就不需要帮助脱 ref, 但如果不是那么就需要进行脱 ref 处理
 export function proxyRefs<T extends object>(
   objectWithRefs: T
 ): ShallowUnwrapRef<T> {
@@ -197,6 +205,7 @@ export function customRef<T>(factory: CustomRefFactory<T>): Ref<T> {
 export type ToRefs<T = any> = {
   [K in keyof T]: ToRef<T[K]>
 }
+// 解决对象的响应式丢失问题, 内部循环调用 toRef 函数: 例子见: 01-reactiveProblem.html
 export function toRefs<T extends object>(object: T): ToRefs<T> {
   if (__DEV__ && !isProxy(object)) {
     console.warn(`toRefs() expects a reactive object but received a plain one.`)
@@ -208,6 +217,7 @@ export function toRefs<T extends object>(object: T): ToRefs<T> {
   return ret
 }
 
+// toRef 函数实现解决对象的单个属性响应式丢失问题的核心逻辑,通过 get set 进行拦截
 class ObjectRefImpl<T extends object, K extends keyof T> {
   public readonly __v_isRef = true
 
@@ -240,6 +250,7 @@ export function toRef<T extends object, K extends keyof T>(
   defaultValue: T[K]
 ): ToRef<Exclude<T[K], undefined>>
 
+// 解决响应式对象丢失的单个属性响应式丢失的函数,也是解决整个响应式对象响应式丢失的核心函数:
 export function toRef<T extends object, K extends keyof T>(
   object: T,
   key: K,

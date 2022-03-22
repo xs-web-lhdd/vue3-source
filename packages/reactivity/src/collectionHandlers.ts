@@ -147,21 +147,25 @@ function clear(this: IterableCollections) {
   return result
 }
 
+// P143
 function createForEach(isReadonly: boolean, isShallow: boolean) {
   return function forEach(
     this: IterableCollections,
     callback: Function,
     thisArg?: unknown
   ) {
+    // 原始对象 Map 自身
     const observed = this as any
     const target = observed[ReactiveFlags.RAW]
     const rawTarget = toRaw(target)
     const wrap = isShallow ? toShallow : isReadonly ? toReadonly : toReactive
+    // 不是只读的就是追踪依赖, 因为遍历操作只与键值对的数量有关,,所以任何修改键值对数量的操作都应该触发依赖进行派发通知,因此与 ITERATE_KEY 建立联系
     !isReadonly && track(rawTarget, TrackOpTypes.ITERATE, ITERATE_KEY)
     return target.forEach((value: unknown, key: unknown) => {
       // important: make sure the callback is
       // 1. invoked with the reactive map as `this` and 3rd arg
       // 2. the value received should be a corresponding reactive/readonly.
+      // 确保传递给 callback 的参数是响应式的数据
       return callback.call(thisArg, wrap(value), wrap(key), observed)
     })
   }
@@ -180,6 +184,7 @@ interface IterationResult {
   done: boolean
 }
 
+// 迭代器方法 P147
 function createIterableMethod(
   method: string | symbol,
   isReadonly: boolean,
@@ -238,6 +243,7 @@ function createReadonlyMethod(type: TriggerOpTypes): Function {
 }
 
 function createInstrumentations() {
+  // 正常响应式情况的处理:
   const mutableInstrumentations: Record<string, Function> = {
     get(this: MapTypes, key: unknown) {
       return get(this, key)
@@ -253,6 +259,7 @@ function createInstrumentations() {
     forEach: createForEach(false, false)
   }
 
+  // 浅响应式的处理:
   const shallowInstrumentations: Record<string, Function> = {
     get(this: MapTypes, key: unknown) {
       return get(this, key, false, true)
@@ -268,6 +275,7 @@ function createInstrumentations() {
     forEach: createForEach(false, true)
   }
 
+  // 只读情况处理:
   const readonlyInstrumentations: Record<string, Function> = {
     get(this: MapTypes, key: unknown) {
       return get(this, key, true)
@@ -285,6 +293,7 @@ function createInstrumentations() {
     forEach: createForEach(true, false)
   }
 
+  // 浅只读情况的处理:
   const shallowReadonlyInstrumentations: Record<string, Function> = {
     get(this: MapTypes, key: unknown) {
       return get(this, key, true, true)

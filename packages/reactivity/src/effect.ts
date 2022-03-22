@@ -285,6 +285,7 @@ export function trigger(
     deps = [...depsMap.values()]
   } else if (key === 'length' && isArray(target)) {
     // 对数组的 length 做操作,就在派发通知的时候让 收集的 length 和 key 大于 newValue 的派发通知 P118
+    // 例如: arr.length = 5
     depsMap.forEach((dep, key) => {
       if (key === 'length' || key >= (newValue as number)) {
         deps.push(dep)
@@ -319,6 +320,7 @@ export function trigger(
         }
         break
       case TriggerOpTypes.SET:
+        // 像 Map 类型,那么 SET 类型的操作也应该触发副作用函数执行 P146
         if (isMap(target)) {
           deps.push(depsMap.get(ITERATE_KEY))
         }

@@ -1,0 +1,34 @@
+<div id="app">
+  {{count}}
+  {{name}}
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    setup() {
+      const state = {
+        count: 0,
+        name: '刘豪'
+      }
+      // console.log(Vue.getCurrentInstance());
+      const a = Vue.onMounted(() => {
+        console.log(111);
+      })
+      console.log(a());
+
+      // return {
+      //   ...state
+      // }
+      return () => {
+        return Vue.h('h1', {}, '我必然覆盖你')
+      }
+    },
+    render() {
+      return {
+        type: 'div',
+        children: '所以我会被覆盖吗?'
+      }
+    }
+  }).mount('#app')
+</script>

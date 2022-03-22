@@ -1,0 +1,27 @@
+<div id="app">
+  {{count}}
+  {{name}}
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    setup() {
+      const state = Vue.reactive({
+        count: 0,
+        name: '刘豪'
+      })
+
+      setTimeout(() => {
+        state.count ++
+      }, 1000)
+
+      return {
+        // 这样会造成响应丢失
+        ...state
+        // 在数据外边包一层 toRefs 就能解决这个问题
+        // ...Vue.toRefs(state)
+      }
+    }
+  }).mount('#app')
+</script>

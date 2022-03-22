@@ -23,8 +23,8 @@ export function injectHook(
 ): Function | undefined {
   if (target) {
     // 生命周期的钩子函数，是在组件生命周期的各个阶段执行
-    // 钩子函数必须要保存在当前的组件实例上，通过不同的字符串 key 找到对应的钩子函数数组并执行
-    const hooks = target[type] || (target[type] = [])
+    // 钩子函数必须要保存在当前的组件实例上，通过不同的字符串 type 找到对应的钩子函数数组并执行
+    const hooks = target[type] || (target[type] = [])  // --->>> 为啥能在组件上执行对应生命周期的钩子函数数组? 因为在这里进行了往组件身上挂载数组的操作
     // cache the error handling wrapper for injected hooks so the same hook
     // can be properly deduped by the scheduler. "__weh" stands for "with error
     // handling".
@@ -42,7 +42,7 @@ export function injectHook(
         // Set currentInstance during hook invocation.
         // This assumes the hook does not synchronously trigger other hooks, which
         // can only be false when the user does something really funky.
-        // 设置 target 为当前运行的组件实例
+        // 设置 target 为当前运行的组件实例, 这样做是为了确保 A 的生命周期钩子函数只添加到 A 上, B 的生命周期钩子函数只添加到 B 上 P319
         setCurrentInstance(target)
         // 执行钩子函数
         const res = callWithAsyncErrorHandling(hook, target, type, args)
@@ -54,6 +54,7 @@ export function injectHook(
     if (prepend) {
       hooks.unshift(wrappedHook)
     } else {
+      // 把定义的钩子函数添加到当前实例对应的 type 类型的钩子函数的数组中
       hooks.push(wrappedHook)
     }
     return wrappedHook

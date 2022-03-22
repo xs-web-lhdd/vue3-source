@@ -67,6 +67,7 @@ export interface KeepAliveContext extends ComponentRenderContext {
   deactivate: (vnode: VNode) => void
 }
 
+// keepAlive 组件身上有一个标记证明是 keepAlive 组件  __isKeepAlive
 export const isKeepAlive = (vnode: VNode): boolean =>
   (vnode.type as any).__isKeepAlive
 
@@ -81,6 +82,7 @@ const KeepAliveImpl: ComponentOptions = {
   props: {
     include: [String, RegExp, Array],
     exclude: [String, RegExp, Array],
+    // max 用来控制缓存的个数， 当超过 max 时，采用 LUR 的思想去缓存中删除最不经常用的节点
     max: [String, Number]
   },
 
@@ -117,12 +119,15 @@ const KeepAliveImpl: ComponentOptions = {
         o: { createElement }
       }
     } = sharedContext
+    // 创建一个容器,用以缓存组件
     const storageContainer = createElement('div')
 
     sharedContext.activate = (vnode, container, anchor, isSVG, optimized) => {
       const instance = vnode.component!
+      // 由于已经能拿到组件了，所以可以调用 move 方法挂载节点了
       move(vnode, container, anchor, MoveType.ENTER, parentSuspense)
       // in case props have changed
+      // 执行 patch 方法更新组件，以防止 props 发生变化的情况：
       patch(
         instance.vnode,
         vnode,
@@ -134,6 +139,7 @@ const KeepAliveImpl: ComponentOptions = {
         vnode.slotScopeIds,
         optimized
       )
+      // 在组件渲染完成后执行 onActivated 钩子函数
       queuePostRenderEffect(() => {
         instance.isDeactivated = false
         if (instance.a) {
@@ -152,6 +158,7 @@ const KeepAliveImpl: ComponentOptions = {
     }
 
     sharedContext.deactivate = (vnode: VNode) => {
+      // 从 dom 树中移除节点:  切记,只是移除 DOM 并不是执行 unMounted 的卸载过程
       const instance = vnode.component!
       move(vnode, storageContainer, null, MoveType.LEAVE, parentSuspense)
       queuePostRenderEffect(() => {
@@ -171,6 +178,7 @@ const KeepAliveImpl: ComponentOptions = {
       }
     }
 
+    // 卸载过程:
     function unmount(vnode: VNode) {
       // reset the shapeFlag so it can be properly unmounted
       resetShapeFlag(vnode)
@@ -200,6 +208,8 @@ const KeepAliveImpl: ComponentOptions = {
     }
 
     // prune cache on include/exclude prop change
+    // include exclude 的 props 是响应式的，所以这是当他们发生变化时的相关处理逻辑
+    // 当 props 发生变化时去存储中删除那些不匹配 include 的节点，同时删除那些匹配 exclude 的节点
     watch(
       () => [props.include, props.exclude],
       ([include, exclude]) => {
@@ -211,6 +221,7 @@ const KeepAliveImpl: ComponentOptions = {
     )
 
     // cache sub tree after render
+    // 执行 cacheSubtree 函数来做缓存:
     let pendingCacheKey: CacheKey | null = null
     const cacheSubtree = () => {
       // fix #1621, the pendingCacheKey could be 0
@@ -227,6 +238,7 @@ const KeepAliveImpl: ComponentOptions = {
         const vnode = getInnerChild(subTree)
         if (cached.type === vnode.type) {
           // current instance will be unmounted as part of keep-alive's unmount
+          // 修改 vnode 的 shapFalg, 不让它再被当作 一个 keepAlive 的 vnode 了
           resetShapeFlag(vnode)
           // but invoke its deactivated hook here
           const da = vnode.component!.da
@@ -238,14 +250,20 @@ const KeepAliveImpl: ComponentOptions = {
     })
 
     return () => {
+      // 初始设置为 null, 就不会进行缓存
       pendingCacheKey = null
 
+      // 如果插槽内没有东西，那么就不需要缓存，直接返回即可
       if (!slots.default) {
         return null
       }
 
+      // keepAlive 组件的实现:
+
+      // 拿到 keepAlive 包裹的子组件:
       const children = slots.default()
       const rawVNode = children[0]
+      // keepAlive 只能渲染单个子节点,所以当长度大于一的时候就会报警告
       if (children.length > 1) {
         if (__DEV__) {
           warn(`KeepAlive should contain exactly one component child.`)
@@ -258,6 +276,7 @@ const KeepAliveImpl: ComponentOptions = {
           !(rawVNode.shapeFlag & ShapeFlags.SUSPENSE))
       ) {
         current = null
+        // keepAlive 是抽象组件,它只会渲染它的第一个子节点
         return rawVNode
       }
 
@@ -274,6 +293,7 @@ const KeepAliveImpl: ComponentOptions = {
 
       const { include, exclude, max } = props
 
+      // 组件不匹配 include 和 匹配 exclude 的情况都不应该被缓存：
       if (
         (include && (!name || !matches(include, name))) ||
         (exclude && name && matches(exclude, name))
@@ -299,6 +319,7 @@ const KeepAliveImpl: ComponentOptions = {
       // beforeMount/beforeUpdate hooks.
       pendingCacheKey = key
 
+      // 有缓存的情况:
       if (cachedVNode) {
         // copy over mounted state
         vnode.el = cachedVNode.el
@@ -308,13 +329,16 @@ const KeepAliveImpl: ComponentOptions = {
           setTransitionHooks(vnode, vnode.transition!)
         }
         // avoid vnode being mounted as fresh
+        // 避免节点被当作新节点被挂载:
         vnode.shapeFlag |= ShapeFlags.COMPONENT_KEPT_ALIVE
         // make this key the freshest
+        // 让这个 key 一直新鲜
         keys.delete(key)
         keys.add(key)
       } else {
         keys.add(key)
         // prune oldest entry
+        // 删除最久没被用的 key ，符合 LRU 思想
         if (max && keys.size > parseInt(max as string, 10)) {
           pruneCacheEntry(keys.values().next().value)
         }
