@@ -141,6 +141,7 @@ const BaseTransitionImpl: ComponentOptions = {
 
     let prevTransitionKey: any
 
+    // 组件本身不渲染什么实体节点,只渲染第一个子节点
     return () => {
       const children =
         slots.default && getTransitionRawChildren(slots.default(), true)
@@ -282,6 +283,7 @@ function getLeavingNodesForType(
 
 // The transition hooks are attached to the vnode as vnode.transition
 // and will be called at appropriate timing in the renderer.
+// 定义组件创建和删除时的钩子函数对象:
 export function resolveTransitionHooks(
   vnode: VNode,
   props: BaseTransitionProps<any>,
@@ -439,6 +441,7 @@ function emptyPlaceholder(vnode: VNode): VNode | undefined {
   }
 }
 
+// 如果 transition 内部内部包裹的有 keepAlive 组件,那么就把 keepAlive 组件里面包裹的组件拿出来
 function getKeepAliveChild(vnode: VNode): VNode | undefined {
   return isKeepAlive(vnode)
     ? vnode.children
@@ -447,6 +450,7 @@ function getKeepAliveChild(vnode: VNode): VNode | undefined {
     : vnode
 }
 
+// 把钩子函数对象,设置到 vnode 的 transition 上
 export function setTransitionHooks(vnode: VNode, hooks: TransitionHooks) {
   if (vnode.shapeFlag & ShapeFlags.COMPONENT && vnode.component) {
     setTransitionHooks(vnode.component.subTree, hooks)

@@ -20,6 +20,7 @@ export interface TeleportProps {
   disabled?: boolean
 }
 
+// 判断是不是 teleport 组件，通过组件身上有没有 __isTeleport 标识：
 export const isTeleport = (type: any): boolean => type.__isTeleport
 
 const isTeleportDisabled = (props: VNode['props']): boolean =>
@@ -28,13 +29,16 @@ const isTeleportDisabled = (props: VNode['props']): boolean =>
 const isTargetSVG = (target: RendererElement): boolean =>
   typeof SVGElement !== 'undefined' && target instanceof SVGElement
 
+// 该函数作用是查找挂载在那个节点下面:
 const resolveTarget = <T = RendererElement>(
   props: TeleportProps | null,
   select: RendererOptions['querySelector']
 ): T | null => {
+  // 获取要挂载的节点: 通过 teleport 组件身上的 props 确定, 如果不在 teleport 上设置就会报警告
   const targetSelector = props && props.to
   if (isString(targetSelector)) {
     if (!select) {
+      // 判断有没有传进来查找节点的选择器,没有传进来选择器就报警告
       __DEV__ &&
         warn(
           `Current renderer does not support string target for Teleports. ` +
@@ -42,6 +46,7 @@ const resolveTarget = <T = RendererElement>(
         )
       return null
     } else {
+      // 传进来查找节点的选择器后,进行查找节点,查找到挂载节点后进行返回,如果没有查找到在控制台报警告
       const target = select(targetSelector)
       if (!target) {
         __DEV__ &&
@@ -62,7 +67,9 @@ const resolveTarget = <T = RendererElement>(
   }
 }
 
+// teleport 组件的处理逻辑:
 export const TeleportImpl = {
+  // 打标记，为 teleport 组件：
   __isTeleport: true,
   process(
     n1: TeleportVNode | null,
@@ -93,6 +100,7 @@ export const TeleportImpl = {
       dynamicChildren = null
     }
 
+    // 如果 n1 为空，那么就是挂载逻辑，否则就是更新逻辑
     if (n1 == null) {
       // insert anchors in the main view
       const placeholder = (n2.el = __DEV__
@@ -103,9 +111,11 @@ export const TeleportImpl = {
         : createText(''))
       insert(placeholder, container, anchor)
       insert(mainAnchor, container, anchor)
+      // 通过查找器找到要挂载的目标对象:
       const target = (n2.target = resolveTarget(n2.props, querySelector))
       const targetAnchor = (n2.targetAnchor = createText(''))
       if (target) {
+        // 插入操作：
         insert(targetAnchor, target)
         // #2652 we could be teleporting from a non-SVG tree into an SVG tree
         isSVG = isSVG || isTargetSVG(target)
@@ -113,6 +123,7 @@ export const TeleportImpl = {
         warn('Invalid Teleport target on mount:', target, `(${typeof target})`)
       }
 
+      // 挂载逻辑,其实就是挂载孩子组件的逻辑,复用 mountChildren
       const mount = (container: RendererElement, anchor: RendererNode) => {
         // Teleport *always* has Array children. This is enforced in both the
         // compiler and vnode children normalization.
@@ -189,6 +200,7 @@ export const TeleportImpl = {
         }
       } else {
         // target changed
+        // 容器发生变化的情况，to 属性值变化的情况：
         if ((n2.props && n2.props.to) !== (n1.props && n1.props.to)) {
           const nextTarget = (n2.target = resolveTarget(
             n2.props,
@@ -266,6 +278,7 @@ export const enum TeleportMoveTypes {
   REORDER // moved in the main view
 }
 
+// 移动 teleport 的操作:
 function moveTeleport(
   vnode: VNode,
   container: RendererElement,
