@@ -1,0 +1,29 @@
+<div id="app">
+  <Comp :count="count"></Comp>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    // Vue.provide('name', 'H2O'),
+
+    setup() {
+      // Vue.provide('name', 'H2O')
+      Vue.provide('age', '20')
+      const count = Vue.ref(0)
+
+      return {
+        count
+      }
+    },
+  })
+  .component('Comp', {
+    template: '<div>111</div>',
+    setup() {
+      Vue.provide('name', 'H2O')
+      Vue.provide('sex', 'male')
+    }
+  })
+  .mount('#app')
+
+</script>
