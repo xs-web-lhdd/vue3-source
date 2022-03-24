@@ -548,12 +548,16 @@ export const locStub: SourceLocation = {
   end: { line: 1, column: 1, offset: 0 }
 }
 
+// 创建 AST 根节点:
 export function createRoot(
   children: TemplateChildNode[],
   loc = locStub
 ): RootNode {
+  // 返回一个 JavaScript 对象作为根节点
   return {
+    // type 表示是一个根节点类型
     type: NodeTypes.ROOT,
+    // children 是我们前面解析的子数组
     children,
     helpers: [],
     components: [],

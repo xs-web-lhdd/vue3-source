@@ -1,3 +1,4 @@
+// 见 Vue.js设计与实现 第五篇 编译器
 import { CompilerOptions } from './options'
 import { baseParse } from './parse'
 import { transform, NodeTransform, DirectiveTransform } from './transform'
@@ -58,6 +59,7 @@ export function getBaseTransformPreset(
 
 // we name it `baseCompile` so that higher order compilers like
 // @vue/compiler-dom can export `compile` while re-exporting everything else.
+// compile 的核心函数 baseCompile：
 export function baseCompile(
   template: string | RootNode,
   options: CompilerOptions = {}
@@ -82,6 +84,7 @@ export function baseCompile(
     onError(createCompilerError(ErrorCodes.X_SCOPE_ID_NOT_SUPPORTED))
   }
 
+  // 第一步：解析 template 生成 AST 抽象语法树
   const ast = isString(template) ? baseParse(template, options) : template
   const [nodeTransforms, directiveTransforms] =
     getBaseTransformPreset(prefixIdentifiers)
@@ -93,6 +96,7 @@ export function baseCompile(
     }
   }
 
+  // 第二步：将模板的 AST 转换为 js 版的 AST
   transform(
     ast,
     extend({}, options, {
@@ -109,6 +113,7 @@ export function baseCompile(
     })
   )
 
+  // 第三步：生成代码
   return generate(
     ast,
     extend({}, options, {
