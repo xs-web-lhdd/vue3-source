@@ -1,0 +1,30 @@
+<div id="app">
+  <Comp :age-one="count"></Comp>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    setup() {
+      const count = Vue.ref(0)
+      const age = 'xxx'
+      return {
+        count,
+        age
+      }
+    },
+  })
+  .component('Comp', {
+    template: '<div>111</div>',
+    props: {
+      'age-one': Number,
+      // 'age': [String, Boolean]
+      'age': Boolean
+    },
+    setup(props) {
+      console.log(props.age);
+    }
+  })
+  .mount('#app')
+
+</script>
