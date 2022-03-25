@@ -14,6 +14,7 @@ import { getConstantType } from './hoistStatic'
 
 // Merge adjacent text nodes and expressions into a single expression
 // e.g. <div>abc {{ d }} {{ e }}</div> should have a single expression node as child.
+// Text 节点转换函数的实现：
 export const transformText: NodeTransform = (node, context) => {
   if (
     node.type === NodeTypes.ROOT ||
@@ -60,6 +61,7 @@ export const transformText: NodeTransform = (node, context) => {
         // as-is since the runtime has dedicated fast path for this by directly
         // setting textContent of the element.
         // for component root it's always normalized anyway.
+        // 如果这是一个带有单个文本子元素的纯元素节点，什么都不需要转换，因为这种情况在运行时可以直接设置元素的 textContent 来更新文本
         (children.length === 1 &&
           (node.type === NodeTypes.ROOT ||
             (node.type === NodeTypes.ELEMENT &&
@@ -84,16 +86,19 @@ export const transformText: NodeTransform = (node, context) => {
 
       // pre-convert text nodes into createTextVNode(text) calls to avoid
       // runtime normalization.
+      // 为子文本节点创建一个调用函数表达式的代码生成节点
       for (let i = 0; i < children.length; i++) {
         const child = children[i]
         if (isText(child) || child.type === NodeTypes.COMPOUND_EXPRESSION) {
           const callArgs: CallExpression['arguments'] = []
           // createTextVNode defaults to single whitespace, so if it is a
           // single space the code could be an empty call to save bytes.
+          // 为 createTextVNode 添加执行参数
           if (child.type !== NodeTypes.TEXT || child.content !== ' ') {
             callArgs.push(child)
           }
           // mark dynamic text with flag so it gets patched inside a block
+          // 标记动态文本
           if (
             !context.ssr &&
             getConstantType(child, context) === ConstantTypes.NOT_CONSTANT

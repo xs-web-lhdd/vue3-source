@@ -39,17 +39,21 @@ import { BindingTypes } from '../options'
 
 const isLiteralWhitelisted = /*#__PURE__*/ makeMap('true,false,null,this')
 
+// 表达式转化函数的实现，主要转换插值和元素指令中的动态表达式，内部主要是通过 processExpression 函数完成
 export const transformExpression: NodeTransform = (node, context) => {
   if (node.type === NodeTypes.INTERPOLATION) {
+    // 处理插值中的动态表达式
     node.content = processExpression(
       node.content as SimpleExpressionNode,
       context
     )
   } else if (node.type === NodeTypes.ELEMENT) {
     // handle directives on element
+    // 处理指令中的动态表达式
     for (let i = 0; i < node.props.length; i++) {
       const dir = node.props[i]
       // do not process for v-on & v-for since they are special handled
+      // v-on 和 v-for 不处理，因为它们都有各自的处理逻辑
       if (dir.type === NodeTypes.DIRECTIVE && dir.name !== 'for') {
         const exp = dir.exp
         const arg = dir.arg

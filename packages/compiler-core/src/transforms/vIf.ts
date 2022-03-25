@@ -39,6 +39,7 @@ import {
 import { PatchFlags, PatchFlagNames } from '@vue/shared'
 import { getMemoedVNodeCall } from '..'
 
+// v-if 转换函数的实现：主要是传入给 createStructuralDirectiveTransform 函数
 export const transformIf = createStructuralDirectiveTransform(
   /^(if|else|else-if)$/,
   (node, dir, context) => {
@@ -58,8 +59,11 @@ export const transformIf = createStructuralDirectiveTransform(
 
       // Exit callback. Complete the codegenNode when all children have been
       // transformed.
+      // 退出回调函数，当所有子节点转换完成执行
       return () => {
         if (isRoot) {
+          // v-if 节点的退出函数
+          // 创建 IF 节点的 codegenNode
           ifNode.codegenNode = createCodegenNodeForBranch(
             branch,
             key,
@@ -67,7 +71,10 @@ export const transformIf = createStructuralDirectiveTransform(
           ) as IfConditionalExpression
         } else {
           // attach this branch's codegen node to the v-if root.
+          // v-else-if v-else 节点的退出函数
+          // 将此分支的 codegenNode 附加到 上一个条件节点的 codegenNode 的 alternate 中
           const parentCondition = getParentCondition(ifNode.codegenNode!)
+          // 更新候选节点
           parentCondition.alternate = createCodegenNodeForBranch(
             branch,
             key + ifNode.branches.length - 1,
@@ -112,7 +119,9 @@ export function processIf(
   }
 
   if (dir.name === 'if') {
+    // 创建分支节点
     const branch = createIfBranch(node, dir)
+    // 创建 IF 节点，替换当前节点
     const ifNode: IfNode = {
       type: NodeTypes.IF,
       loc: node.loc,
@@ -124,6 +133,7 @@ export function processIf(
     }
   } else {
     // locate the adjacent v-if
+    // 处理 v-if 相邻节点，比如 v-else-if 和 v-else
     const siblings = context.parent!.children
     const comments = []
     let i = siblings.indexOf(node)
@@ -146,6 +156,7 @@ export function processIf(
 
       if (sibling && sibling.type === NodeTypes.IF) {
         // Check if v-else was followed by v-else-if
+        // 把节点移动到 IF 节点的 branches 中
         if (
           dir.name === 'else-if' &&
           sibling.branches[sibling.branches.length - 1].condition === undefined
@@ -192,11 +203,14 @@ export function processIf(
         const onExit = processCodegen && processCodegen(sibling, branch, false)
         // since the branch was removed, it will not be traversed.
         // make sure to traverse here.
+        // 因为分支已被删除,所以它的子节点需要在这里遍历
         traverseNode(branch, context)
         // call on exit
+        // 退出执行
         if (onExit) onExit()
         // make sure to reset currentNode after traversal to indicate this
         // node has been removed.
+        // 恢复 currentNode 为 null.因为它已经被移除
         context.currentNode = null
       } else {
         context.onError(
@@ -208,11 +222,13 @@ export function processIf(
   }
 }
 
+// 创建分支节点,分支是否可见取决于 condition 是否为 true 以及子节点 children
 function createIfBranch(node: ElementNode, dir: DirectiveNode): IfBranchNode {
   return {
     type: NodeTypes.IF_BRANCH,
     loc: node.loc,
     condition: dir.name === 'else' ? undefined : dir.exp,
+    // 如果节点 node 不是 template 那么 children 指向的就是这个单个 node 构造的数组
     children:
       node.tagType === ElementTypes.TEMPLATE && !findDir(node, 'for')
         ? node.children
@@ -227,6 +243,7 @@ function createCodegenNodeForBranch(
   context: TransformContext
 ): IfConditionalExpression | BlockCodegenNode | MemoExpression {
   if (branch.condition) {
+    // 通过 createConditionalExpression 返回一个条件表达式节点：
     return createConditionalExpression(
       branch.condition,
       createChildrenCodegenNode(branch, keyIndex, context),

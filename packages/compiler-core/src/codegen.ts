@@ -1,3 +1,4 @@
+// Vue.js 设计与实现  P402
 import { CodegenOptions } from './options'
 import {
   RootNode,
@@ -187,6 +188,7 @@ function createCodegenContext(
   return context
 }
 
+// 生成代码逻辑：
 export function generate(
   ast: RootNode,
   options: CodegenOptions & {

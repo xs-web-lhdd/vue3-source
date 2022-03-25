@@ -571,6 +571,7 @@ export function createRoot(
   }
 }
 
+// 返回一个对象，包含传入参数的数据
 export function createVNodeCall(
   context: TransformContext | null,
   tag: VNodeCall['tag'],
@@ -688,6 +689,7 @@ type InferCodegenNodeType<T> = T extends typeof RENDER_SLOT
   ? RenderSlotCall
   : CallExpression
 
+// 返回一个类型为 JS_CALL_EXPRESSION 的对象
 export function createCallExpression<T extends CallExpression['callee']>(
   callee: T,
   args: CallExpression['arguments'] = [],
@@ -718,6 +720,7 @@ export function createFunctionExpression(
   }
 }
 
+// 返回一个条件表达式节点：
 export function createConditionalExpression(
   test: ConditionalExpression['test'],
   consequent: ConditionalExpression['consequent'],

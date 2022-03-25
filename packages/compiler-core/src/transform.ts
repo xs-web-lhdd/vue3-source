@@ -1,3 +1,4 @@
+// Vue.js 设计与实现 P383 --- P402
 import { TransformOptions } from './options'
 import {
   RootNode,
@@ -122,6 +123,7 @@ export interface TransformContext
   filters?: Set<string>
 }
 
+// 创建一个 transform 上下文对象并返回：
 export function createTransformContext(
   root: RootNode,
   {
@@ -150,7 +152,7 @@ export function createTransformContext(
 ): TransformContext {
   const nameMatch = filename.replace(/\?.*$/, '').match(/([^/\\]+)\.\w+$/)
   const context: TransformContext = {
-    // options
+    // options 配置
     selfName: nameMatch && capitalize(camelize(nameMatch[1])),
     prefixIdentifiers,
     hoistStatic,
@@ -173,7 +175,7 @@ export function createTransformContext(
     onWarn,
     compatConfig,
 
-    // state
+    // state 状态数据
     root,
     helpers: new Map(),
     components: new Set(),
@@ -195,7 +197,7 @@ export function createTransformContext(
     childIndex: 0,
     inVOnce: false,
 
-    // methods
+    // methods 包含了在调用过程中可能会用到的辅助函数
     helper(name) {
       const count = context.helpers.get(name) || 0
       context.helpers.set(name, count + 1)
@@ -242,16 +244,17 @@ export function createTransformContext(
         throw new Error(`node being removed is not a child of current parent`)
       }
       if (!node || node === context.currentNode) {
-        // current node removed
+        // current node removed 移除当前节点
         context.currentNode = null
         context.onNodeRemoved()
       } else {
-        // sibling node removed
+        // sibling node removed 移除兄弟节点
         if (context.childIndex > removalIndex) {
           context.childIndex--
           context.onNodeRemoved()
         }
       }
+      // 移除节点：
       context.parent!.children.splice(removalIndex, 1)
     },
     onNodeRemoved: () => {},
@@ -314,16 +317,22 @@ export function createTransformContext(
   return context
 }
 
+// 编译第二步 transform 实现过程：
 export function transform(root: RootNode, options: TransformOptions) {
+  // transform 第一步之创建 transform 上下文：
   const context = createTransformContext(root, options)
+  // transform 第二步之遍历 AST 节点：
   traverseNode(root, context)
+  // transform 第三步之静态提升过程：
   if (options.hoistStatic) {
     hoistStatic(root, context)
   }
+  // transform 第四步之创建根节点的代码生成节点
   if (!options.ssr) {
     createRootCodegen(root, context)
   }
   // finalize meta information
+  // 赋值给节点的属性
   root.helpers = [...context.helpers.keys()]
   root.components = [...context.components]
   root.directives = [...context.directives]
@@ -337,6 +346,7 @@ export function transform(root: RootNode, options: TransformOptions) {
   }
 }
 
+// 创建根节点的代码生成节点
 function createRootCodegen(root: RootNode, context: TransformContext) {
   const { helper } = context
   const { children } = root
@@ -359,6 +369,7 @@ function createRootCodegen(root: RootNode, context: TransformContext) {
     }
   } else if (children.length > 1) {
     // root has multiple nodes - return a fragment block.
+    // 如果子节点是多个节点，则返回一个 fragement 的代码生产节点
     let patchFlag = PatchFlags.STABLE_FRAGMENT
     let patchFlagText = PatchFlagNames[PatchFlags.STABLE_FRAGMENT]
     // check if the fragment actually contains a single valid child with
@@ -405,16 +416,20 @@ export function traverseChildren(
   }
 }
 
+// 遍历 AST 节点：
 export function traverseNode(
   node: RootNode | TemplateChildNode,
   context: TransformContext
 ) {
   context.currentNode = node
-  // apply transform plugins
+  // apply transform plugins、
+  // 节点转化函数：
   const { nodeTransforms } = context
   const exitFns = []
   for (let i = 0; i < nodeTransforms.length; i++) {
+    // 有些函数会返回一个回退函数,会在处理完子节点之后执行,因为有些节点的处理是需要依赖子节点的处理结果的所以设置了回退函数,见 P392 15.4.3 进入与退出
     const onExit = nodeTransforms[i](node, context)
+    // 将退出函数放入 exitFns 中的操作,是数组就展开放入,是函数就直接放入
     if (onExit) {
       if (isArray(onExit)) {
         exitFns.push(...onExit)
@@ -422,11 +437,12 @@ export function traverseNode(
         exitFns.push(onExit)
       }
     }
+    // 节点被移除直接返回即可,就不需要后续的一系列操作了
     if (!context.currentNode) {
       // node was removed
       return
     } else {
-      // node may have been replaced
+      // node may have been replaced 因为在转换过程中节点可能被替换,恢复到之前的节点
       node = context.currentNode
     }
   }
@@ -448,6 +464,7 @@ export function traverseNode(
 
     // for container types, further traverse downwards
     case NodeTypes.IF:
+      // 递归遍历每一个分支节点:
       for (let i = 0; i < node.branches.length; i++) {
         traverseNode(node.branches[i], context)
       }
@@ -456,13 +473,15 @@ export function traverseNode(
     case NodeTypes.FOR:
     case NodeTypes.ELEMENT:
     case NodeTypes.ROOT:
+      // 遍历子节点:
       traverseChildren(node, context)
       break
   }
 
-  // exit transforms
+  // exit transforms 执行转换函数返回的退出函数
   context.currentNode = node
   let i = exitFns.length
+  // 注意函数执行的顺序!!!
   while (i--) {
     exitFns[i]()
   }
@@ -477,10 +496,12 @@ export function createStructuralDirectiveTransform(
     : (n: string) => name.test(n)
 
   return (node, context) => {
+    // 只处理元素节点，也比较好理解，只有元素节点才有 v-if 指令
     if (node.type === NodeTypes.ELEMENT) {
       const { props } = node
       // structural directive transforms are not concerned with slots
       // as they are handled separately in vSlot.ts
+      // 结构化指令的转换与插槽无关，插槽相关处理逻辑在 vSlot.ts 中
       if (node.tagType === ElementTypes.TEMPLATE && props.some(isVSlot)) {
         return
       }
@@ -491,6 +512,7 @@ export function createStructuralDirectiveTransform(
           // structural directives are removed to avoid infinite recursion
           // also we remove them *before* applying so that it can further
           // traverse itself in case it moves the node around
+          // 删除结构指令以避免无限递归
           props.splice(i, 1)
           i--
           const onExit = fn(node, prop, context)

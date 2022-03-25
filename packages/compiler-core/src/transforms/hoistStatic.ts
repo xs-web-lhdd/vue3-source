@@ -25,6 +25,7 @@ import {
   NORMALIZE_STYLE
 } from '../runtimeHelpers'
 
+// 静态提升：
 export function hoistStatic(root: RootNode, context: TransformContext) {
   walk(
     root,
@@ -59,6 +60,7 @@ function walk(
   for (let i = 0; i < children.length; i++) {
     const child = children[i]
     // only plain elements & text calls are eligible for hoisting.
+    // 只有普通元素和文本节点才能被静态提升
     if (
       child.type === NodeTypes.ELEMENT &&
       child.tagType === ElementTypes.ELEMENT
@@ -77,6 +79,7 @@ function walk(
       } else {
         // node may contain dynamic children, but its props may be eligible for
         // hoisting.
+        // 节点可能会包含一些动态子节点，但它的静态属性还是可以被静态提升
         const codegenNode = child.codegenNode!
         if (codegenNode.type === NodeTypes.VNODE_CALL) {
           const flag = getPatchFlag(codegenNode)
@@ -99,6 +102,7 @@ function walk(
       }
     } else if (
       child.type === NodeTypes.TEXT_CALL &&
+      // 文本节点也可以静态提升
       getConstantType(child.content, context) >= ConstantTypes.CAN_HOIST
     ) {
       child.codegenNode = context.hoist(child.codegenNode)

@@ -1,3 +1,4 @@
+// Element 转换函数的实现文件:
 import { NodeTransform, TransformContext } from '../transform'
 import {
   NodeTypes,
@@ -74,6 +75,7 @@ const directiveImportMap = new WeakMap<DirectiveNode, symbol>()
 export const transformElement: NodeTransform = (node, context) => {
   // perform the work on exit, after all child expressions have been
   // processed and merged.
+  // 返回一个退出函数,在所有子表达式处理并合并后执行
   return function postTransformElement() {
     node = context.currentNode!
 
@@ -87,6 +89,7 @@ export const transformElement: NodeTransform = (node, context) => {
       return
     }
 
+    // 转换的目标是创建一个实现 VNodeCall 接口的代码生成节点
     const { tag, props } = node
     const isComponent = node.tagType === ElementTypes.COMPONENT
 
@@ -99,14 +102,19 @@ export const transformElement: NodeTransform = (node, context) => {
     const isDynamicComponent =
       isObject(vnodeTag) && vnodeTag.callee === RESOLVE_DYNAMIC_COMPONENT
 
+    // 属性
     let vnodeProps: VNodeCall['props']
+    // 子节点
     let vnodeChildren: VNodeCall['children']
+    // 标记更新的类型标识，用于运行时优化
     let vnodePatchFlag: VNodeCall['patchFlag']
     let patchFlag: number = 0
+    // 动态绑定的属性
     let vnodeDynamicProps: VNodeCall['dynamicProps']
     let dynamicPropNames: string[] | undefined
     let vnodeDirectives: VNodeCall['directives']
 
+    // 动态组件 SVG foreignObject 标签以及动态绑定 key prop 的节点都被视作一个 Block
     let shouldUseBlock =
       // dynamic component may resolve to plain elements
       isDynamicComponent ||
@@ -119,7 +127,7 @@ export const transformElement: NodeTransform = (node, context) => {
         // leads to too much unnecessary complexity.
         (tag === 'svg' || tag === 'foreignObject'))
 
-    // props
+    // 处理 props
     if (props.length > 0) {
       const propsBuildResult = buildProps(node, context)
       vnodeProps = propsBuildResult.props
@@ -138,8 +146,9 @@ export const transformElement: NodeTransform = (node, context) => {
       }
     }
 
-    // children
+    // 处理 children
     if (node.children.length > 0) {
+      // 对内置组件 keepAlive 的处理逻辑 
       if (vnodeTag === KEEP_ALIVE) {
         // Although a built-in component, we compile KeepAlive with raw children
         // instead of slot functions so that it can be used inside Transition
@@ -147,8 +156,10 @@ export const transformElement: NodeTransform = (node, context) => {
         // To ensure correct updates with block optimizations, we need to:
         // 1. Force keep-alive into a block. This avoids its children being
         //    collected by a parent block.
+        // 1 把 keepAlive 看作是一个 Block, 这样可以避免它的子节点的动态节点被父 Block 收集
         shouldUseBlock = true
         // 2. Force keep-alive to always be updated, since it uses raw children.
+        // 2 确保它始终更新
         patchFlag |= PatchFlags.DYNAMIC_SLOTS
         if (__DEV__ && node.children.length > 1) {
           context.onError(
@@ -164,17 +175,20 @@ export const transformElement: NodeTransform = (node, context) => {
       const shouldBuildAsSlots =
         isComponent &&
         // Teleport is not a real component and has dedicated runtime handling
+        // Teleport 不是一个真正的组件,它有专门的运行时处理
         vnodeTag !== TELEPORT &&
         // explained above.
         vnodeTag !== KEEP_ALIVE
 
       if (shouldBuildAsSlots) {
+        // 组件有 children .则处理插槽
         const { slots, hasDynamicSlots } = buildSlots(node, context)
         vnodeChildren = slots
         if (hasDynamicSlots) {
           patchFlag |= PatchFlags.DYNAMIC_SLOTS
         }
       } else if (node.children.length === 1 && vnodeTag !== TELEPORT) {
+        // 对内置组件 teleport 的处理逻辑
         const child = node.children[0]
         const type = child.type
         // check for dynamic text children
@@ -190,6 +204,7 @@ export const transformElement: NodeTransform = (node, context) => {
         // pass directly if the only child is a text node
         // (plain / interpolation / expression)
         if (hasDynamicTextChild || type === NodeTypes.TEXT) {
+        // 如果只是一个普通的文本节点 插值或者表达式,直接把节点赋值给 vnodeChildren
           vnodeChildren = child as TemplateTextChildNode
         } else {
           vnodeChildren = node.children
@@ -200,6 +215,7 @@ export const transformElement: NodeTransform = (node, context) => {
     }
 
     // patchFlag & dynamicPropNames
+    // 处理 patchFlag 和 dynamicPropNames
     if (patchFlag !== 0) {
       if (__DEV__) {
         if (patchFlag < 0) {
@@ -207,6 +223,7 @@ export const transformElement: NodeTransform = (node, context) => {
           vnodePatchFlag = patchFlag + ` /* ${PatchFlagNames[patchFlag]} */`
         } else {
           // bitwise flags
+          // 获取 flag 对应的名字，生成注释，方便理解生成代码对应节点的 pathFlag
           const flagNames = Object.keys(PatchFlagNames)
             .map(Number)
             .filter(n => n > 0 && patchFlag & n)
