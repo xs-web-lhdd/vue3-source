@@ -642,7 +642,7 @@ export function setupComponent(
   const { props, children } = instance.vnode
   // 判断是否是一个有状态组件：
   const isStateful = isStatefulComponent(instance)
-  // 属性和插槽的初始化：
+  // 属性和插槽的初始化：属性: P306   插槽: P316
   initProps(instance, props, isStateful, isSSR)
   initSlots(instance, children)
 

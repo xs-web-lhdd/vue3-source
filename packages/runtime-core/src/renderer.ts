@@ -1086,6 +1086,7 @@ function baseCreateRenderer(
     }
 
     if (n1 == null) {
+      // 先在前后插入两个空文本节点
       hostInsert(fragmentStartAnchor, container, anchor)
       hostInsert(fragmentEndAnchor, container, anchor)
       // a fragment can only have array children

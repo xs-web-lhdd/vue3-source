@@ -126,6 +126,7 @@ const normalizeVNodeSlots = (
   instance.slots.default = () => normalized
 }
 
+// 初始化插槽部分:
 export const initSlots = (
   instance: ComponentInternalInstance,
   children: VNodeNormalizedChildren
@@ -154,6 +155,7 @@ export const initSlots = (
   def(instance.slots, InternalObjectKey, 1)
 }
 
+// 更新插槽部分:
 export const updateSlots = (
   instance: ComponentInternalInstance,
   children: VNodeNormalizedChildren,
@@ -206,3 +208,8 @@ export const updateSlots = (
     }
   }
 }
+
+/**
+ * 插槽的实现实际上就是一种延时渲染,把父组件中编写的插槽内容保存到一个对象上,
+ * 并且把具体渲染DOM的代码用函数的方式封装,然后在子组件渲染的时候根据插槽名在对象中找到对应的函数,然后执行这些函数做真正的渲染
+ */

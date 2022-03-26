@@ -747,6 +747,7 @@ export function normalizeChildren(vnode: VNode, children: unknown) {
       }
       return
     } else {
+      // 处理 Teleport 的情况
       type = ShapeFlags.SLOTS_CHILDREN
       const slotFlag = (children as RawSlots)._
       if (!slotFlag && !(InternalObjectKey in children!)) {
@@ -783,7 +784,7 @@ export function normalizeChildren(vnode: VNode, children: unknown) {
   vnode.shapeFlag |= type
 }
 
-export function mergeProps(...args: (Data & VNodeProps)[]) {
+export function mergeProps(...args: (Data & VNodeProps)[]): Data {
   const ret: Data = {}
   for (let i = 0; i < args.length; i++) {
     const toMerge = args[i]
