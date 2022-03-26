@@ -261,17 +261,22 @@ export function createAppAPI<HostElement>(
         return app
       },
 
+      // 把指令注册到全局上下文 context 中的逻辑:
       directive(name: string, directive?: Directive) {
+        // 开发环境下验证指令名称是否合法：其实就是检验名称是否与内置指令名字冲突，如 v-if 就是不合法的自定义指令名
         if (__DEV__) {
           validateDirectiveName(name)
         }
 
+        // 没有第二个参数，就获取对应的指令对象
         if (!directive) {
           return context.directives[name] as any
         }
+        // 重复注册指令的警告
         if (__DEV__ && context.directives[name]) {
           warn(`Directive "${name}" has already been registered in target app.`)
         }
+        // 注册指令：
         context.directives[name] = directive
         return app
       },

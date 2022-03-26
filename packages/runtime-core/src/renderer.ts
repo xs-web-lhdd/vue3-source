@@ -661,6 +661,7 @@ function baseCreateRenderer(
       }
 
       if (dirs) {
+        // 执行 created 的钩子函数
         invokeDirectiveHook(vnode, null, parentComponent, 'created')
       }
       // props
@@ -711,6 +712,7 @@ function baseCreateRenderer(
       })
     }
     if (dirs) {
+      // 执行指令的 beforeMounted 钩子函数
       invokeDirectiveHook(vnode, null, parentComponent, 'beforeMount')
     }
     // #1583 For inside suspense + suspense not resolved case, enter hook should call when suspense resolved
@@ -732,6 +734,7 @@ function baseCreateRenderer(
       queuePostRenderEffect(() => {
         vnodeHook && invokeVNodeHook(vnodeHook, parentComponent, vnode)
         needCallTransitionHooks && transition!.enter(el)
+        // 执行指令的 mounted 钩子函数
         dirs && invokeDirectiveHook(vnode, null, parentComponent, 'mounted')
       }, parentSuspense)
     }
@@ -828,6 +831,7 @@ function baseCreateRenderer(
       invokeVNodeHook(vnodeHook, parentComponent, n2, n1)
     }
     if (dirs) {
+      // 元素更新前执行对应的 beforeupdate 指令钩子函数
       invokeDirectiveHook(n2, n1, parentComponent, 'beforeUpdate')
     }
     parentComponent && toggleRecurse(parentComponent, true)
@@ -953,6 +957,7 @@ function baseCreateRenderer(
     if ((vnodeHook = newProps.onVnodeUpdated) || dirs) {
       queuePostRenderEffect(() => {
         vnodeHook && invokeVNodeHook(vnodeHook, parentComponent, n2, n1)
+        // 元素更新后执行对应的 updated 指令钩子函数
         dirs && invokeDirectiveHook(n2, n1, parentComponent, 'updated')
       }, parentSuspense)
     }
@@ -2143,6 +2148,7 @@ function baseCreateRenderer(
       }
 
       if (shouldInvokeDirs) {
+        // 元素删除前执行对应的 unmounted 指令钩子函数
         invokeDirectiveHook(vnode, null, parentComponent, 'beforeUnmount')
       }
 
@@ -2190,6 +2196,7 @@ function baseCreateRenderer(
     ) {
       queuePostRenderEffect(() => {
         vnodeHook && invokeVNodeHook(vnodeHook, parentComponent, vnode)
+        // 元素删除后执行对应的 unmounted 指令钩子函数
         shouldInvokeDirs &&
           invokeDirectiveHook(vnode, null, parentComponent, 'unmounted')
       }, parentSuspense)

@@ -1,0 +1,41 @@
+<div id="app">
+  <input type="text" v-focus="1111" v-aaa v-bbb>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    directives: {
+      focus: {
+        mounted(el) {
+          el.focus()
+        },
+        updated() {
+          console.log(111);
+        }
+      },
+      aaa: {
+        beforeUpdate() {
+          console.log('beforeUpdated');
+        }
+      },
+      bbb: () => {
+        console.log('我是函数的情况');
+      }
+    },
+    setup() {
+      const count = Vue.ref(0)
+
+      return {
+        count
+      }
+    },
+  })
+  // .directive('focus', {
+  //   mounted(el) {
+  //     el.focus()
+  //   }
+  // })
+  .mount('#app')
+
+</script>
