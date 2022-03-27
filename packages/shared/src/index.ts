@@ -107,6 +107,7 @@ const camelizeRE = /-(\w)/g
 /**
  * @private
  */
+// 将连字符转成驼峰形式
 export const camelize = cacheStringFunction((str: string): string => {
   return str.replace(camelizeRE, (_, c) => (c ? c.toUpperCase() : ''))
 })
@@ -115,6 +116,7 @@ const hyphenateRE = /\B([A-Z])/g
 /**
  * @private
  */
+// 将 str 转换为连字符的形式
 export const hyphenate = cacheStringFunction((str: string) =>
   str.replace(hyphenateRE, '-$1').toLowerCase()
 )
@@ -122,6 +124,7 @@ export const hyphenate = cacheStringFunction((str: string) =>
 /**
  * @private
  */
+// 将字符串首字母大写
 export const capitalize = cacheStringFunction(
   (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 )
@@ -129,6 +132,7 @@ export const capitalize = cacheStringFunction(
 /**
  * @private
  */
+// 标准化事件函数名称,将首字母大写并在前面加上 on
 export const toHandlerKey = cacheStringFunction((str: string) =>
   str ? `on${capitalize(str)}` : ``
 )

@@ -1,5 +1,6 @@
 <div id="app">
-  <input type="text" v-focus="1111" v-aaa v-bbb>
+  <input :type="type" v-focus="1111" v-aaa v-bbb>
+  <button @click="updateInput">让 input 更新</button>
 </div>
 
 <script src="../dist/vue.global.js"></script>
@@ -25,9 +26,14 @@
     },
     setup() {
       const count = Vue.ref(0)
-
+      const type = Vue.ref('text')
+      function updateInput() {
+        type.value = 'number'
+      }
       return {
-        count
+        count,
+        type,
+        updateInput
       }
     },
   })

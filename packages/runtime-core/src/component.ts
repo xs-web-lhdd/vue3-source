@@ -502,6 +502,7 @@ export function createComponentInstance(
     directives: null,
 
     // resolved props and emits options
+    // 在组件实例创建的时候,会标准化 props 选项,和 emits 选项,标准化后的结果赋给 propsOptions 和 emitsProps
     propsOptions: normalizePropsOptions(type, appContext),
     emitsOptions: normalizeEmitsOptions(type, appContext),
 

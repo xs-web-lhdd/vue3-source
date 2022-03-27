@@ -1,0 +1,41 @@
+<div id="app">
+  <Comp @update:modelValue="$event=>{count=$event}" :modelValue="count"></Comp>
+  <Comp v-model.trim="count"></Comp>
+  <!-- <Comp v-model:text="count"></Comp> -->
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    setup() {
+      const count = Vue.ref(0)
+      function changeValue(v) {
+        count.value = v
+      }
+      return {
+        count,
+        changeValue
+      }
+    },
+  })
+  .component('Comp', {
+    template: `<input v-model="value" />`,
+    props: ['modelValue'],
+    setup(props, { emit }) {
+      const value = Vue.computed({
+        get() {
+          props.modelValue
+        },
+        set(value) {
+          emit('update:modelValue', value)
+        }
+      })
+
+      return {
+        value
+      }
+    }
+  })
+  .mount('#app')
+
+</script>

@@ -411,12 +411,12 @@ export const PublicInstanceProxyHandlers: ProxyHandler<any> = {
     const { data, setupState, ctx } = instance
     if (setupState !== EMPTY_OBJ && hasOwn(setupState, key)) {
       // 给 setupState 赋值
-      console.log('你修改了 setup 里面的数据');
+      // console.log('你修改了 setup 里面的数据');
       setupState[key] = value
       return true
     } else if (data !== EMPTY_OBJ && hasOwn(data, key)) {
       // 给 data 赋值
-      console.log('你这是修改 data 中的数据');
+      // console.log('你这是修改 data 中的数据');
       
       data[key] = value
       return true

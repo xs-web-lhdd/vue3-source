@@ -1,0 +1,41 @@
+<div id="app">
+  <div>{{count}}</div>
+  <Comp @aaa="log" count="count"></Comp>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    emits: ['aaa'],
+    setup() {
+      const count = Vue.ref(0)
+      function log(e) {
+        console.log(e);
+      }
+      return {
+        count,
+        log
+      }
+    },
+  })
+  .component('Comp', {
+    template: `<div @click="message" style="width: 100px; height: 100px; color: red;">这是子组件</div>`,
+    emits: {
+      aaa: () => {
+        console.log('我是来验证的');
+        return false
+      }
+    },
+    props: ['count'],
+    setup(props, { emit }) {
+      const xxx = Vue.ref('这是要发送的信息')
+      function message() {
+        emit('aaa', xxx.value)
+      }
+
+      return { message }
+    }
+  })
+  .mount('#app')
+
+</script>

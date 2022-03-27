@@ -1,0 +1,25 @@
+<div id="app">
+  <div>{{count}}</div>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    // 接受子组件传来的 emit 的 emits 写法一：
+    // emits: ['aaa'],
+    // emits 写法二：
+    emits: {
+      aaa: {
+        type: String
+      }
+    },
+    setup() {
+      const count = Vue.ref(0)
+      return {
+        count,
+      }
+    },
+  })
+  .mount('#app')
+
+</script>

@@ -1,0 +1,22 @@
+<div id="app">
+  <input type="text" v-model="count">
+  <button @click="add">{{count}}</button>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    setup() {
+      const count = Vue.ref(0)
+      function add() {
+        count.value++
+      }
+      return {
+        count,
+        add
+      }
+    },
+  })
+  .mount('#app')
+
+</script>
