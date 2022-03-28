@@ -5,8 +5,10 @@ interface VShowElement extends HTMLElement {
   _vod: string
 }
 
+// v-show 对应的指令对象：其实就是设置 css 的 style 的 display 为 none
 export const vShow: ObjectDirective<VShowElement> = {
   beforeMount(el, { value }, { transition }) {
+    // 先在 el._vod 上存储元素原本的 display 属性，然后后面都是判断指令对应的值是否为 true，为 true 就将 display 设置为之前的 display 属性值，不为 true 就设置为 'none'
     el._vod = el.style.display === 'none' ? '' : el.style.display
     if (transition && value) {
       transition.beforeEnter(el)

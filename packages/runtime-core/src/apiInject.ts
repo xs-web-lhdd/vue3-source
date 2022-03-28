@@ -89,7 +89,7 @@ export function inject(
 
 /*
   引发的思考？
-  问：Vue3.js 跨组件共享数组，为何要用 provide/inject ? 直接 export/import 数据行吗 ？
+  问：Vue3.js 跨组件共享数据，为何要用 provide/inject ? 直接 export/import 数据行吗 ？
 
   模块化是可以用来共享数据的，但与 provide/inject 有几点不同
   1、作用域不同：
@@ -111,7 +111,7 @@ export function inject(
 
   问：上面提到了组件库使用依赖注入，为什么不使用 this.$parent 和 this.$children 呢？
   因为 this.$paent 和 this.$children 是一种强耦合的获取父组件实例方式，不利于代码的重构，
-  因为一旦组件层级发生变化，就会产生非预期的后果，在平时的开发工作中慎用\
+  因为一旦组件层级发生变化，就会产生非预期的后果，在平时的开发工作中慎用
 
   问: inject 是如何找到祖先组件的值的呢?
   通过原型链找到的,inject 会先去父组件的 provides 中去找,如果找不到就会去 父组件的 provides 的原型中去找(也就是爷爷组件的 provides 中找), 直到找到或者找到根组件的 provides 中,

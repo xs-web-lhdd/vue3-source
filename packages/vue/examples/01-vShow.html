@@ -1,0 +1,20 @@
+<div id="app">
+  <div v-show:text="count">{{count}}</div>
+  <button @click="show">来吧展示</button>
+</div>
+
+<script src="../dist/vue.global.js"></script>
+<script>
+  Vue.createApp({
+    setup() {
+      const count = Vue.ref(true)
+      function show() {
+        count.value = !count.value
+      }
+      return {
+        count,
+        show
+      }
+    }
+  }).mount('#app')
+</script>
